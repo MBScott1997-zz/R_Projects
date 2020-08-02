@@ -1,0 +1,108 @@
+---
+title: "Office Mate Profitability Reccomendation Analysis"
+author: "Michael Scott" 
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r echo = FALSE}
+# Clear environment of variables and functions
+rm(list = ls(all = TRUE)) 
+
+# Clear environmet of packages
+if(is.null(sessionInfo()$otherPkgs) == FALSE)lapply(paste("package:", names(sessionInfo()$otherPkgs), sep=""), detach, character.only = TRUE, unload = TRUE)
+
+```
+
+```{r echo = FALSE}
+# Load packages
+library(tidyverse) # The tidyverse package contains ggplot2, dplyr, and several other packages we will use
+library(gridExtra) # use to put graphs together in the same frame
+library(scales) # to get $ and , on axis in graph
+library(janitor) # The janitor package contains tidyverse functions for cross-tables
+library(knitr) # The knitr package contains some table formating functions
+library(GGally) # The GGally package contains a custom correlation plot we will use
+library(MASS) #for the chi square test
+library(colorspace) #Graph design
+library(flexdashboard) # For storyboard template, note YAML setting
+
+OM <- read.csv("mtp_off_mate.csv")
+
+
+OM <- transform(OM, Price = Revenue / Quantity)
+```
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+
+### **The South has the 2nd Highest Avg. Price per Order**
+
+```{r}
+OM %>% 
+  ggplot(mapping = aes(x = reorder(Region, Price), y = Price, fill = Region)) + 
+  geom_bar(position = "dodge", stat = "summary", fun.y = "median") +
+  coord_flip() +
+  theme_classic() +
+  ggtitle("The South has the 2nd highest", 
+          sub = "avg price") +
+  labs(x = "Region", y = "Avg Price") +
+  scale_y_continuous(labels = dollar) + # add dollar sign and comma in axis label from scales package
+  scale_fill_manual(values = c("gray", "gray", "blue", "gray"), guide = FALSE)
+```
+
+### **Tech Products Provide the Top 3 Highest Avg Profits per Item**
+
+```{r}
+OM %>%
+    ggplot(mapping = aes(x = reorder(Sub.Category, -Profit), y = Profit)) + 
+    geom_bar(position = "dodge", stat = "summary", fun.y = "median", fill = "Light Blue") +
+    theme_classic() +
+    ggtitle("Copiers provide the highest average profit",
+        sub = "Supplies, Bookcases, and Tables (Furniture) have a negative average profit") +
+    labs(x = "Sub Category", y = "Avg Profit") +
+    scale_y_continuous(labels = dollar) + # add dollar sign and comma in axis label from scales package
+    scale_x_discrete(labels = abbreviate)
+```
+
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Recommendations {data-height=200}
+
++ Increase marketing efforts towards the Southern Region
+
++ Increase marketing of Technology products and stop selling Furniture items
+
+
+### **The South has the Highest Avg Quantity per Order**
+
+```{r}
+OM %>% 
+  ggplot(mapping = aes(x = reorder(Region, Quantity), y = Quantity, fill = Region)) + 
+  geom_bar(position = "dodge", stat = "summary", fun.y = "median") +
+  coord_flip() +
+  theme_classic() +
+  ggtitle("The South has the highest", 
+          sub = "avg quantity per order") +
+  labs(x = "Region", y = "Avg Quantity per order") +
+  scale_fill_manual(values = c("gray", "gray", "blue", "gray"), guide = FALSE)
+```
+
+### **Technology sales carry the highest average profit**
+
+```{r}
+OM %>%
+  ggplot(mapping = aes(x = reorder(Category, -Profit), y = Profit)) + 
+  geom_bar(position = "dodge", stat = "summary", fun.y = "median", fill = "Light Blue") +
+  theme_classic() +
+  ggtitle("Technology sales carry the highest average profit",
+      sub = "Office Supplies are highest sellers with $20 average profit") +
+  labs(x = "Category", y = "Avg Profit") +
+  scale_y_continuous(labels = dollar)
+```
+
+
+
